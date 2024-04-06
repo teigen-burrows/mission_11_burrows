@@ -1,32 +1,39 @@
 using Microsoft.AspNetCore.Mvc;
 using mission_11_burrows.Models;
-using System.Diagnostics;
+using mission_11_burrows.Models.ViewModels;
 
 namespace mission_11_burrows.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private IBookRepository _repo;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IBookRepository temp)
         {
-            _logger = logger;
+            _repo = temp;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(int pageNum)
         {
-            return View();
+            int pageSize = 10;
+
+            var viewModel = new IndexViewModel
+            {
+                Books = _repo.Books
+                .OrderBy(x => x.Title)
+                .Skip((pageNum - 1) * pageSize)
+                .Take(pageSize),
+
+                PaginationInfo = new PaginationInfo
+                {
+                    CurrentPage = pageNum,
+                    ItemsPerPage = pageSize,
+                    TotalItems = _repo.Books.Count()
+                }
+            };
+
+            return View(viewModel);
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
     }
 }
